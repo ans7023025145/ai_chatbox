@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAI – Your Academic Study Assistant</title>
+    <meta name="description" content="EduAI is a domain-specific study assistant designed to help students master engineering and academic concepts.">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>EduAI</span>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" id="btn-chat">
+                    <i class="fas fa-comment-dots"></i> Study Chat
+                </button>
+                <div class="nav-section">TOOLS</div>
+                <button class="nav-item" onclick="setAction('explain')">
+                    <i class="fas fa-lightbulb"></i> Concept Explainer
+                </button>
+                <button class="nav-item" onclick="setAction('summarize')">
+                    <i class="fas fa-compress-alt"></i> Text Summarizer
+                </button>
+                <button class="nav-item" onclick="setAction('quiz')">
+                    <i class="fas fa-vial"></i> Quiz Generator
+                </button>
+                <div class="nav-section">CHAT HISTORY</div>
+                <div id="history-list" class="history-list">
+                    <!-- History items will be loaded here -->
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="dot"></span>
+                    <span>Academic Focus Active</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-info">
+                    <h1>Academic Assistant</h1>
+                    <p>Engineering & General Studies</p>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" title="Clear Chat" id="clear-chat">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <button class="icon-btn" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="chat-wrapper">
+                <div id="chat-messages" class="chat-messages">
+                    <!-- Welcome Message -->
+                    <div class="message ai-message">
+                        <div class="avatar"><i class="fas fa-robot"></i></div>
+                        <div class="message-content">
+                            <p>Hello! I am <strong>EduAI</strong>, your dedicated study assistant. How can I help you with your academic concepts today?</p>
+                            <div class="suggestions">
+                                <button onclick="suggestQuery('Explain Quantum Computing step-by-step')">Explain Quantum Computing</button>
+                                <button onclick="suggestQuery('Summarize the laws of thermodynamics')">Summarize Thermodynamics</button>
+                                <button onclick="suggestQuery('Generate a 3-question quiz on calculus')">Calculus Quiz</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="input-actions" id="active-action-badge" style="display: none;">
+                        <span id="action-text">Explain Mode</span>
+                        <button onclick="clearAction()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <form id="chat-form" class="chat-form">
+                        <textarea id="user-input" placeholder="Ask an academic question..." rows="1"></textarea>
+                        <button type="submit" id="send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                    <p class="input-footer">EduAI provides educational support and may occasionally produce errors. Verify with textbooks.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2>Assistant Settings</h2>
+                <button class="close-btn" id="close-settings"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label>Inference Model</label>
+                    <select id="model-select" disabled>
+                        <option>Llama 3.3 70B (Versatile)</option>
+                    </select>
+                    <p class="setting-desc">Groq is optimized for high-speed academic reasoning.</p>
+                </div>
+                <div class="setting-item">
+                    <label>Conversation ID</label>
+                    <code id="current-session-id">Loading...</code>
+                </div>
+                <div class="setting-item">
+                    <button class="danger-btn" id="clear-all-data">
+                        <i class="fas fa-exclamation-triangle"></i> Reset All Data
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <p>EduAI v2.1 – Powered by Groq & MongoDB</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
