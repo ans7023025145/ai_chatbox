@@ -25,13 +25,20 @@ const mongoose = require('mongoose');
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI;
+const DATA_FILE = path.join(__dirname, 'database.json');
+
+// Helper to check DB status
+const isMongoConnected = () => mongoose.connection.readyState === 1;
 
 if (MONGODB_URI) {
     mongoose.connect(MONGODB_URI)
         .then(() => console.log('MongoDB connected successfully'))
-        .catch(err => console.error('MongoDB connection error:', err));
+        .catch(err => {
+            console.error('MongoDB connection error:', err.message);
+            console.warn('Falling back to local database.json storage.');
+        });
 } else {
-    console.warn('MONGODB_URI not found in environment variables. Data will not be persisted.');
+    console.warn('MONGODB_URI not found. Using local database.json storage.');
 }
 
 // Message Schema
@@ -44,10 +51,23 @@ const messageSchema = new mongoose.Schema({
 
 const Message = mongoose.model('Message', messageSchema);
 
-// Database helper functions updated for MongoDB
+// Database helper functions with fallback
 async function getMessages(filter = {}) {
     try {
-        return await Message.find(filter).sort({ timestamp: 1 });
+        if (isMongoConnected()) {
+            return await Message.find(filter).sort({ timestamp: 1 });
+        } else {
+            // Fallback to JSON file
+            if (!fs.existsSync(DATA_FILE)) return [];
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            
+            return data.filter(msg => {
+                for (let key in filter) {
+                    if (msg[key] !== filter[key]) return false;
+                }
+                return true;
+            }).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        }
     } catch (e) {
         console.error('Error fetching messages:', e);
         return [];
@@ -56,13 +76,19 @@ async function getMessages(filter = {}) {
 
 async function addMessage(conversationId, role, content) {
     try {
-        const newMessage = new Message({
-            conversationId,
-            role,
-            content,
-            timestamp: new Date().toISOString()
-        });
-        await newMessage.save();
+        const timestamp = new Date().toISOString();
+        if (isMongoConnected()) {
+            const newMessage = new Message({ conversationId, role, content, timestamp });
+            await newMessage.save();
+        } else {
+            // Fallback to JSON file
+            let data = [];
+            if (fs.existsSync(DATA_FILE)) {
+                data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            }
+            data.push({ conversationId, role, content, timestamp });
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
     } catch (e) {
         console.error('Error saving message:', e);
     }
@@ -141,11 +167,24 @@ app.delete('/api/history/:conversationId', async (req, res) => {
     try {
         let { conversationId } = req.params;
         
-        if (conversationId === 'null' || !conversationId) {
-            await Message.deleteMany({ conversationId: { $exists: false } });
-            await Message.deleteMany({ conversationId: 'null' });
+        if (isMongoConnected()) {
+            if (conversationId === 'null' || !conversationId) {
+                await Message.deleteMany({ conversationId: { $exists: false } });
+                await Message.deleteMany({ conversationId: 'null' });
+            } else {
+                await Message.deleteMany({ conversationId: conversationId });
+            }
         } else {
-            await Message.deleteMany({ conversationId: conversationId });
+            // JSON fallback
+            if (fs.existsSync(DATA_FILE)) {
+                let data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+                if (conversationId === 'null' || !conversationId) {
+                    data = data.filter(msg => msg.conversationId && msg.conversationId !== 'null');
+                } else {
+                    data = data.filter(msg => msg.conversationId !== conversationId);
+                }
+                fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+            }
         }
         
         res.json({ success: true, message: 'Conversation deleted' });
@@ -157,7 +196,14 @@ app.delete('/api/history/:conversationId', async (req, res) => {
 // Route to delete all history
 app.delete('/api/history', async (req, res) => {
     try {
-        await Message.deleteMany({});
+        if (isMongoConnected()) {
+            await Message.deleteMany({});
+        } else {
+            // JSON fallback
+            if (fs.existsSync(DATA_FILE)) {
+                fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2));
+            }
+        }
         res.json({ success: true, message: 'All history deleted' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete all history' });
@@ -221,14 +267,18 @@ app.post('/api/chat', async (req, res) => {
         }
 
         if (!aiResponse) {
-            throw new Error('No AI provider available or all providers failed. Check your API keys in .env');
+            console.error('All AI providers failed. Groq:', !!groq, 'GenAI:', !!genAI);
+            throw new Error('No AI provider available or all providers failed. Check your API keys in Render Environment Variables.');
         }
 
         await addMessage(conversationId, 'assistant', aiResponse);
         res.json({ text: aiResponse });
 
     } catch (error) {
-        console.error('Chat Error:', error);
+        console.error('--- DETAILED CHAT ERROR ---');
+        console.error('Message:', error.message);
+        console.error('Stack:', error.stack);
+        console.error('---------------------------');
         res.status(500).json({ error: 'Failed to generate response', details: error.message });
     }
 });

@@ -26,7 +26,7 @@ function generateUUID() {
 
 async function loadConversations() {
     try {
-        const response = await fetch('http://localhost:5000/api/conversations');
+        const response = await fetch('/api/conversations');
         const conversations = await response.json();
         
         historyList.innerHTML = '';
@@ -46,7 +46,7 @@ async function loadConversations() {
 
 async function loadHistory(id) {
     try {
-        const response = await fetch(`http://localhost:5000/api/history/${id}`);
+        const response = await fetch(`/api/history/${id}`);
         const history = await response.json();
         
         chatMessages.innerHTML = ''; // Clear current view
@@ -125,7 +125,7 @@ chatForm.addEventListener('submit', async (e) => {
     const typingId = addTypingIndicator();
     
     try {
-        const response = await fetch('http://localhost:5000/api/chat', {
+        const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -265,7 +265,7 @@ window.addEventListener('click', (e) => {
 clearChatBtn.addEventListener('click', async (e) => {
     if (confirm('Permanently delete this conversation from history?')) {
         try {
-            const response = await fetch(`http://localhost:5000/api/history/${currentConversationId}`, {
+            const response = await fetch(`/api/history/${currentConversationId}`, {
                 method: 'DELETE'
             });
             const data = await response.json();
@@ -295,7 +295,7 @@ const clearAllDataBtn = document.getElementById('clear-all-data');
 clearAllDataBtn.addEventListener('click', async () => {
     if (confirm('CRITICAL: This will permanently delete ALL chat history from the database. Are you sure?')) {
         try {
-            const response = await fetch('http://localhost:5000/api/history', {
+            const response = await fetch('/api/history', {
                 method: 'DELETE'
             });
             const data = await response.json();
