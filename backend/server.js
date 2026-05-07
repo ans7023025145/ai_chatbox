@@ -21,34 +21,51 @@ app.use(express.json());
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Local File Database Connection
-const dbPath = path.join(__dirname, 'database.json');
-if (!fs.existsSync(dbPath)) {
-    fs.writeFileSync(dbPath, JSON.stringify([]));
+const mongoose = require('mongoose');
+
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (MONGODB_URI) {
+    mongoose.connect(MONGODB_URI)
+        .then(() => console.log('MongoDB connected successfully'))
+        .catch(err => console.error('MongoDB connection error:', err));
+} else {
+    console.warn('MONGODB_URI not found in environment variables. Data will not be persisted.');
 }
 
-function getMessages() {
+// Message Schema
+const messageSchema = new mongoose.Schema({
+    conversationId: String,
+    role: String,
+    content: String,
+    timestamp: { type: Date, default: Date.now }
+});
+
+const Message = mongoose.model('Message', messageSchema);
+
+// Database helper functions updated for MongoDB
+async function getMessages(filter = {}) {
     try {
-        const data = fs.readFileSync(dbPath, 'utf8');
-        return JSON.parse(data);
+        return await Message.find(filter).sort({ timestamp: 1 });
     } catch (e) {
+        console.error('Error fetching messages:', e);
         return [];
     }
 }
 
-function saveMessages(messages) {
-    fs.writeFileSync(dbPath, JSON.stringify(messages, null, 2));
-}
-
-function addMessage(conversationId, role, content) {
-    const messages = getMessages();
-    messages.push({
-        conversationId,
-        role,
-        content,
-        timestamp: new Date().toISOString()
-    });
-    saveMessages(messages);
+async function addMessage(conversationId, role, content) {
+    try {
+        const newMessage = new Message({
+            conversationId,
+            role,
+            content,
+            timestamp: new Date().toISOString()
+        });
+        await newMessage.save();
+    } catch (e) {
+        console.error('Error saving message:', e);
+    }
 }
 
 // Initialize AI Providers
@@ -83,7 +100,7 @@ Current focus: Engineering and general studies.
 // Route to get all unique conversations
 app.get('/api/conversations', async (req, res) => {
     try {
-        const messages = getMessages();
+        const messages = await getMessages();
         const convMap = {};
         
         messages.forEach(msg => {
@@ -111,7 +128,7 @@ app.get('/api/conversations', async (req, res) => {
 app.get('/api/history/:conversationId', async (req, res) => {
     try {
         const { conversationId } = req.params;
-        const history = getMessages().filter(m => m.conversationId === conversationId);
+        const history = await getMessages({ conversationId: conversationId });
         res.json(history);
     } catch (error) {
         console.error('History fetch error:', error);
@@ -123,15 +140,14 @@ app.get('/api/history/:conversationId', async (req, res) => {
 app.delete('/api/history/:conversationId', async (req, res) => {
     try {
         let { conversationId } = req.params;
-        let messages = getMessages();
         
         if (conversationId === 'null' || !conversationId) {
-            messages = messages.filter(m => m.conversationId && m.conversationId !== 'null');
+            await Message.deleteMany({ conversationId: { $exists: false } });
+            await Message.deleteMany({ conversationId: 'null' });
         } else {
-            messages = messages.filter(m => m.conversationId !== conversationId);
+            await Message.deleteMany({ conversationId: conversationId });
         }
         
-        saveMessages(messages);
         res.json({ success: true, message: 'Conversation deleted' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete conversation' });
@@ -141,7 +157,7 @@ app.delete('/api/history/:conversationId', async (req, res) => {
 // Route to delete all history
 app.delete('/api/history', async (req, res) => {
     try {
-        saveMessages([]);
+        await Message.deleteMany({});
         res.json({ success: true, message: 'All history deleted' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete all history' });
@@ -160,7 +176,7 @@ app.post('/api/chat', async (req, res) => {
             return res.status(400).json({ error: 'Message is required' });
         }
 
-        addMessage(conversationId, 'user', message);
+        await addMessage(conversationId, 'user', message);
 
         let aiResponse = "";
 
@@ -208,7 +224,7 @@ app.post('/api/chat', async (req, res) => {
             throw new Error('No AI provider available or all providers failed. Check your API keys in .env');
         }
 
-        addMessage(conversationId, 'assistant', aiResponse);
+        await addMessage(conversationId, 'assistant', aiResponse);
         res.json({ text: aiResponse });
 
     } catch (error) {
