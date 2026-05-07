@@ -233,7 +233,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`EduAI Server running on http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`EduAI Server running on port ${port}`);
 });
 

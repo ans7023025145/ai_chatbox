@@ -136,5 +136,17 @@
     "role": "assistant",
     "content": "**Bayes' Theorem**\n================\n\nBayes' theorem is a fundamental concept in probability theory and statistics. It's a mathematical formula that describes how to update the probability of a hypothesis based on new evidence. The theorem is named after Thomas Bayes, an 18th-century British mathematician who first proposed it.\n\n**The Formula**\n---------------\n\nThe Bayes' theorem formula is:\n\n**P(H|E) = P(E|H) \\* P(H) / P(E)**\n\nWhere:\n\n* **P(H|E)**: The probability of the hypothesis (H) given the evidence (E), also known as the posterior probability.\n* **P(E|H)**: The probability of the evidence (E) given the hypothesis (H), also known as the likelihood.\n* **P(H)**: The prior probability of the hypothesis (H).\n* **P(E)**: The prior probability of the evidence (E).\n\n**How it Works**\n----------------\n\n1. **Prior Probability**: You start with an initial belief about the probability of a hypothesis (P(H)).\n2. **New Evidence**: You receive new evidence (E) that may affect your belief in the hypothesis.\n3. **Likelihood**: You calculate the probability of the evidence given the hypothesis (P(E|H)).\n4. **Posterior Probability**: You update your belief about the hypothesis using the Bayes' theorem formula (P(H|E)).\n\n**Example**\n-----------\n\nSuppose you want to determine the probability that a person has a certain disease (H) given that they test positive (E) for the disease.\n\n* **P(H)**: The prior probability of having the disease is 0.01 (1%).\n* **P(E|H)**: The probability of testing positive given that you have the disease is 0.99 (99%).\n* **P(E)**: The prior probability of testing positive is 0.05 (5%).\n\nUsing Bayes' theorem, you can calculate the posterior probability:\n\n**P(H|E) = P(E|H) \\* P(H) / P(E)**\n= 0.99 \\* 0.01 / 0.05\n= 0.198 (or approximately 19.8%)\n\nThis means that given the new evidence (testing positive), the probability of having the disease is approximately 19.8%.\n\n**Applications**\n----------------\n\nBayes' theorem has many applications in:\n\n* **Machine Learning**: Bayesian inference is used in machine learning algorithms to update model parameters based on new data.\n* **Medicine**: Bayes' theorem is used to diagnose diseases and predict patient outcomes.\n* **Finance**: Bayes' theorem is used to update portfolio probabilities and predict stock prices.\n\nI hope this explanation helps you understand Bayes' theorem! Do you have any specific questions or would you like more examples?",
     "timestamp": "2026-05-07T06:09:16.393Z"
+  },
+  {
+    "conversationId": "chat-hytt9cswv-1778135293670",
+    "role": "user",
+    "content": "hi",
+    "timestamp": "2026-05-07T06:28:29.454Z"
+  },
+  {
+    "conversationId": "chat-hytt9cswv-1778135293670",
+    "role": "assistant",
+    "content": "**Welcome to EduAI, your academic study assistant!** I'm here to help you with engineering and general academic concepts. What topic would you like to explore or what question do you have? I'll do my best to provide a clear and concise explanation. \n\nSome areas I can assist with include:\n* **Mathematics**: algebra, calculus, geometry, etc.\n* **Engineering**: mechanical, electrical, computer science, etc.\n* **Science**: physics, chemistry, biology, etc.\n* **General studies**: study tips, research methods, and more.\n\nFeel free to ask me anything, and I'll be happy to help!",
+    "timestamp": "2026-05-07T06:28:30.300Z"
   }
 ]
